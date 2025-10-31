@@ -1,0 +1,23 @@
+# Loan Detail with Proof
+
+A React-based web app for managing loans with signature and video proof to prevent fraud.
+
+## Features
+- Borrower details entry
+- Interest calculation (annual & monthly)
+- Digital signature
+- Video proof recording
+- Timestamped records
+- Payment chart
+
+## Setup
+1. Clone the repo.
+2. Run `npm install`.
+3. Run `npm start`.
+4. Open http://localhost:3000.
+
+## Deploy
+Use Vercel or Netlify for free hosting.
+
+## Note
+This is a demo. Add backend (Node.js) and database for production. Ensure legal compliance.
