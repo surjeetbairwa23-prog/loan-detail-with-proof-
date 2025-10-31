@@ -1,0 +1,9 @@
+loan-detail-with-proof/
+├── public/
+│   └── index.html
+├── src/
+│   ├── App.js
+│   ├── LoanForm.js
+│   └── index.js
+├── package.json
+└── README.md
