@@ -1,0 +1,89 @@
+import React, { useState, useRef } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
+import { Line } from 'react-chartjs-2';
+
+function LoanForm() {
+  const [loanData, setLoanData] = useState({
+    borrowerName: '',
+    borrowerPhone: '',
+    borrowerEmail: '',
+    amount: 0,
+    annualInterest: 0,
+    months: 0,
+    monthlyInterest: 0,
+    totalReturn: 0,
+    signature: null,
+    videoProof: null,
+    timestamp: new Date().toISOString()
+  });
+
+  const sigCanvas = useRef(null);
+  const videoRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const calculate = () => {
+    const monthlyRate = loanData.annualInterest / 100 / 12;
+    const totalReturn = loanData.amount * (1 + monthlyRate * loanData.months);
+    setLoanData({ ...loanData, monthlyInterest: monthlyRate * 100, totalReturn });
+  };
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    videoRef.current.srcObject = stream;
+    videoRef.current.play();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    const stream = videoRef.current.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(track => track.stop());
+    setIsRecording(false);
+    setLoanData({ ...loanData, videoProof: 'recorded' }); // In real app, save to cloud
+  };
+
+  const handleSubmit = () => {
+    if (!loanData.signature || !loanData.videoProof) {
+      alert('Please provide signature and video proof!');
+      return;
+    }
+    // In real app, send to backend API (e.g., Node.js + MongoDB)
+    console.log('Loan Data Submitted:', loanData);
+    alert('Loan recorded successfully! Timestamp: ' + loanData.timestamp);
+  };
+
+  const clearSignature = () => sigCanvas.current.clear();
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+      <h2>Loan Entry Form</h2>
+      <input placeholder="Borrower Name" onChange={(e) => setLoanData({...loanData, borrowerName: e.target.value})} />
+      <input placeholder="Phone" onChange={(e) => setLoanData({...loanData, borrowerPhone: e.target.value})} />
+      <input placeholder="Email" onChange={(e) => setLoanData({...loanData, borrowerEmail: e.target.value})} />
+      <input type="number" placeholder="Loan Amount (₹)" onChange={(e) => setLoanData({...loanData, amount: parseFloat(e.target.value)})} />
+      <input type="number" placeholder="Annual Interest (%)" onChange={(e) => setLoanData({...loanData, annualInterest: parseFloat(e.target.value)})} />
+      <input type="number" placeholder="Duration (Months)" onChange={(e) => setLoanData({...loanData, months: parseInt(e.target.value)})} />
+      <button onClick={calculate}>Calculate</button>
+      <p>Monthly Interest: {loanData.monthlyInterest.toFixed(2)}%</p>
+      <p>Total Return: ₹{loanData.totalReturn.toFixed(2)}</p>
+      
+      <h3>Digital Signature</h3>
+      <SignatureCanvas ref={sigCanvas} penColor='black' canvasProps={{width: 500, height: 200}} onEnd={() => setLoanData({...loanData, signature: 'signed'})} />
+      <button onClick={clearSignature}>Clear Signature</button>
+      
+      <h3>Video Proof</h3>
+      <video ref={videoRef} width="320" height="240" controls></video>
+      {!isRecording ? <button onClick={startRecording}>Start Recording</button> : <button onClick={stopRecording}>Stop Recording</button>}
+      
+      <button onClick={handleSubmit}>Submit Loan</button>
+      
+      <h3>Payment Chart</h3>
+      <Line data={{
+        labels: Array.from({length: loanData.months}, (_, i) => `Month ${i+1}`),
+        datasets: [{label: 'Outstanding Amount', data: Array.from({length: loanData.months}, (_, i) => loanData.totalReturn - (loanData.amount / loanData.months) * (i+1))}]
+      }} />
+    </div>
+  );
+}
+
+export default LoanForm;
